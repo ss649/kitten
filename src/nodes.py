@@ -11,34 +11,34 @@ from src.state import (
     PipelineState,
     VerificationStatus,
 )
+from src.tools import pbt_execute_tool
 
 logger = logging.getLogger(__name__)
 
 
-def basic_pbt_node(state: PipelineState) -> Dict[str, Any]:
+def basic_pbt_node(state: PipelineState):
 
-    logger.info("Executing run_pbt_node")
+    logger.info("Executing run_pbt_node ....")
 
     try:
-        # TODO: Fix parsing of PBT code
-        pbt_results: List[Any] = []
-
+        pbt_execute_tool()
+        pbt_results = []
         return {
-            "stage": PipelineStage.PLAUSIBLE_PBT,
+            "stage": PipelineStage.PBT,
             "pbt_results": pbt_results,
             "verification_status": VerificationStatus.PENDING,
         }
 
     except Exception as e:
-        logger.error(f"Error during PBT execution: {e}", exc_info=True)
+        logger.error("Error during PBT execution: "+e, exc_info=True)
         return {
             "stage": PipelineStage.FAILED,
-            "verification_status": VerificationStatus.PROOF_FAILED,
+            "verification_status": VerificationStatus.FAILED,
             "error": str(e),
         }
 
 
-def parse_python_file_node(state: PipelineState) -> Dict[str, Any]:
+def parse_python_file_node(state: PipelineState):
 
     logger.info("Initial parsing ....")
 
@@ -56,7 +56,7 @@ def parse_python_file_node(state: PipelineState) -> Dict[str, Any]:
                 extracted_functions.append({
                     "name": node.name,
                     "code": ast.unparse(node),
-                    "args": [arg.arg for arg in node.args.args],
+                    
                     "docstring": ast.get_docstring(node) or "",
                 })
 
@@ -67,6 +67,38 @@ def parse_python_file_node(state: PipelineState) -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Error parsing Python file '{file_path}': {e}", exc_info=True)
+        return {
+            "stage": PipelineStage.FAILED,
+            "error": str(e),
+        }
+
+
+def property_generate_node(state):
+    logger.info("Generating properties for extracted functions...")
+
+    extracted_functions = state.get("extracted_functions", [])
+    generated_properties = []
+
+    try:
+        #TInitialize LLM client
+
+        for func in extracted_functions:
+            func_name = func.get("name", "")
+            func_code = func.get("code", "")
+
+            #Format prompt with func_name and func_code
+            generated_properties.append({
+                "function_name": func_name,
+                "test_code": f"# TODO: generated hypothesis test for {func_name}",
+            })
+
+        return {
+            "stage": PipelineStage.PBT,
+            "generated_properties": generated_properties,
+        }
+
+    except Exception as e:
+        logger.error(f"Error generating properties: {e}", exc_info=True)
         return {
             "stage": PipelineStage.FAILED,
             "error": str(e),
