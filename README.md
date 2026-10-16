@@ -1,14 +1,15 @@
 # Kitten
 
-An agentic engineering project framework.
+An agentic Property Based Testing tool
+
 
 ## Overview
 This repository hosts the core framework, architecture specifications, agent designs, and tools for the Kitten project.
+This project is a work in progress.
 
 ## Project Structure
-- `docs/architecture.md` - High-level system architecture and orchestration flow.
-- `docs/agent-design.md` - Individual agent specifications, inputs/outputs, and decision responsibilities.
-- `docs/tool-registry.md` - Catalogue of registered tools available to agents.
+TODO
+
 
 ## Getting Started
 1. Clone the repository.
