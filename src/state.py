@@ -1,26 +1,26 @@
 from __future__ import annotations
 
 from enum import Enum
-import operator
-from typing import Annotated, Any, Dict, List, Optional, TypedDict
+from typing import Any, Dict, List, Optional, TypedDict
 
-from langchain_core.messages import BaseMessage
-from langgraph.graph.message import add_messages
 
-#Sample pipeline design
-class PipelineStage(str, Enum): 
+class PipelineStage(str, Enum):
     INIT = "INIT"
     PARSING = "PARSING"
-    INITIAL_PBT = "INITIAL_PBT"
-    LEAN_KERNEL_CHECK = "LEAN_KERNEL_CHECK"
+    PBT = "PBT"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
 
 
 class VerificationStatus(str, Enum):
     PENDING = "PENDING"
-    PBT_REJECTED = "PBT_REJECTED"
-    TACTIC_TIMEOUT = "TACTIC_TIMEOUT"
-    PROOF_FAILED = "PROOF_FAILED"
-    CERTIFIED = "CERTIFIED"
+    FAILED = "FAILED"
+    PASSED = "PASSED"
 
+class PipelineState(TypedDict, total=False):
+    file_path: str
+    stage: PipelineStage
+    extracted_functions: List[Dict[str, Any]]
+    pbt_results: List[Any]
+    verification_status: VerificationStatus
+    error: Optional[str]

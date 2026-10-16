@@ -7,11 +7,8 @@ from typing import Any, Dict, List, Literal
 from langchain_core.messages import AIMessage, HumanMessage
 
 from src.state import (
-    CandidateProperty,
-    PBTResult,
     PipelineStage,
     PipelineState,
-    ProofArtifact,
     VerificationStatus,
 )
 
