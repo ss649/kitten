@@ -7,7 +7,6 @@ from typing import Optional, Annotated
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
-from src.nodes import basic_pbt_node, parse_python_file_node
 from src.state import PipelineState
 from google.cloud import aiplatform
 from langchain_core.prompts import ChatPromptTemplate
@@ -33,21 +32,18 @@ def pbt_execute_tool(test_target, max_examples=100, timeout_seconds=10):
             }
             exec(test_target, local_scope)
 
-            test_fn = None
-            for key, value in local_scope.items():
-                if callable(value) and key.startswith("test_"):
-                    test_fn = value
-                    break
+            test_fns = [value for key, value in local_scope.items() if callable(value) and key.startswith("test_")]
 
-            if test_fn is None:
+            if not test_fns:
                 return {
                     "status": "ERROR",
                     "error_message": "No test function starting with 'test_' found in code string.",
                     "counterexample": None,
                 }
 
-            configured_fn = applied_settings(test_fn)
-            configured_fn()
+            for test_fn in test_fns:
+                configured_fn = applied_settings(test_fn)
+                configured_fn()
         else:
             return {
                 "status": "ERROR",

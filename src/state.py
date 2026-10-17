@@ -21,6 +21,7 @@ class PipelineState(TypedDict, total=False):
     file_path: str
     stage: PipelineStage
     extracted_functions: List[Dict[str, Any]]
+    generated_properties: List[Dict[str, Any]]
     pbt_results: List[Any]
     verification_status: VerificationStatus
     error: Optional[str]
