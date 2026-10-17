@@ -1,6 +1,6 @@
 # Kitten
 
-An agentic Property Based Testing tool.
+An agentic Property Based Testing tool built with LangGraph.
 
 ## Overview
 This project aims to integrate LLM generated properties for use in Property Based Testing.
@@ -26,4 +26,6 @@ This project is a work in progess and specifics will be determined later.
 
 ## Getting Started
 1. Clone the repository.
-
+2. Run ```pip install -e```
+3. Set up API key (More on this to come)
+4. Run kitten --help and follow the instructions
