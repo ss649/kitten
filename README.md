@@ -3,6 +3,7 @@
 An agentic Property Based Testing tool built with LangGraph.
 
 ## Overview
+
 This project aims to integrate LLM generated properties for use in Property Based Testing.
 
 PBT is most effective with a substantial amount of properties for testing, but LLM generated properties may be contaminated by hallucinated properties and could cause false positive test failures. This project aims to add an element of agentic formalization to the generrated properties to ensure maximum accuracy. 
@@ -29,3 +30,7 @@ This project is a work in progess and specifics will be determined later.
 2. Run ```pip install -e```
 3. Set up API key (More on this to come)
 4. Run kitten --help and follow the instructions
+
+## Running kitten
+
+Kitten can be run from the terminal itself, with the format ```kitten [-h] [--pbt] [file]```
