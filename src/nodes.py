@@ -172,3 +172,35 @@ def property_generate_node(state):
             "stage": PipelineStage.FAILED,
             "error": str(e),
         }
+
+
+def soundness_gate_node(state):
+    logger.info("Executing soundness_gate_node...")
+
+    generated_properties = state.get("generated_properties", [])
+    extracted_functions = state.get("extracted_functions", [])
+
+    verified_properties = []
+    refuted_properties = []
+    undecided_properties = []
+
+    try:
+        for prop in generated_properties:
+            pass
+
+        return {
+            "stage": getattr(PipelineStage, "SOUNDNESS_GATE", PipelineStage.PBT),
+            "verified_properties": verified_properties,
+            "refuted_properties": refuted_properties,
+            "undecided_properties": undecided_properties,
+            "verification_status": VerificationStatus.PENDING,
+        }
+
+    except Exception as e:
+        logger.error(f"Error during soundness gate verification: {e}", exc_info=True)
+        return {
+            "stage": PipelineStage.FAILED,
+            "verification_status": VerificationStatus.FAILED,
+            "error": str(e),
+        }
+
