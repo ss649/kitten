@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import sys
 
@@ -16,6 +17,13 @@ def main():
     )
 
     parser.add_argument(
+        "--debug",
+        "-v",
+        action="store_true",
+        help="Enable debug logging output.",
+    )
+
+    parser.add_argument(
         "file",
         nargs="?",
         help="Path to the Python file to test.",
@@ -26,6 +34,12 @@ def main():
     if not args.file or not args.pbt:
         parser.print_help()
         sys.exit(0)
+
+    log_level = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(
+        level=log_level,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
 
     if not os.path.exists(args.file):
         print(f"Error: Target file '{args.file}' does not exist.")
@@ -43,6 +57,9 @@ def main():
         stage = final_state.get("stage")
         status = final_state.get("verification_status")
         extracted = final_state.get("extracted_functions", [])
+        verified = final_state.get("verified_properties", [])
+        refuted = final_state.get("refuted_properties", [])
+        undecided = final_state.get("undecided_properties", [])
         pbt_results = final_state.get("pbt_results", [])
         error = final_state.get("error")
 
@@ -55,6 +72,16 @@ def main():
 
         for func in extracted:
             print(f"  - {func.get('name')}")
+
+        print("-" * 50)
+        print("Z3 Soundness Formalization:")
+        print(f"  Verified   : {len(verified)}")
+        print(f"  Refuted    : {len(refuted)}")
+        print(f"  Undecided  : {len(undecided)}")
+        for prop in verified:
+            print(f"  [+] {prop.get('function_name')}: {prop.get('property_name')} ({prop.get('formal_status', 'VERIFIED')})")
+        for prop in refuted:
+            print(f"  [-] {prop.get('function_name')}: {prop.get('property_name')} ({prop.get('formal_status', 'REFUTED')})")
 
         print("-" * 50)
         print("PBT Test Results:")
