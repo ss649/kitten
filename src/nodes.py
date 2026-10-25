@@ -10,6 +10,8 @@ from groq import Groq
 from z3 import Solver, Int, Real, Bool, Const, SeqSort, IntSort, Length
 # client = Groq()
 from google import genai
+# from mutmut import mutate_ast, Context, meta_ast
+from mutmut import Context, mutate
 from google.genai import types
 from langchain_core.messages import AIMessage, HumanMessage
 
@@ -18,7 +20,7 @@ from src.state import (
     PipelineState,
     VerificationStatus,
 )
-from src.tools import pbt_execute_tool, smt_verify_tool
+from src.tools import pbt_execute_tool, smt_verify_tool, mut_check_tool
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +150,6 @@ def property_generate_node(state):
                 "]\n"
             )
 
-            # Groq implementation (commented out)
             # model_name = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
             # chat_completion = client.chat.completions.create(
             #     model=model_name,
@@ -167,7 +168,6 @@ def property_generate_node(state):
             # )
             # raw_text = chat_completion.choices[0].message.content or ""
 
-            # Gemini implementation using SGEMINI_API_KEY
             raw_text = ""
             for attempt in range(4):
                 try:

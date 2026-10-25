@@ -8,13 +8,16 @@ from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from src.state import PipelineState
+from src.helpers import mutant_survival, extract_mutant_callable
 from google.cloud import aiplatform
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable, RunnableConfig
-
+import mutmut
 from hypothesis import given, strategies as st, assume, settings, example, errors, HealthCheck
 import traceback
 import z3
+import inspect
+import ast
 
 def pbt_execute_tool(test_target, max_examples=100, timeout_seconds=10):
     applied_settings = settings(
@@ -99,7 +102,7 @@ def smt_verify_tool(
     try:
 
         env = {"z3": z3}
-        inv_fn = eval(z3_lambda_str, env)
+        inv_fn = eval(z3_lambda_str, env) # check again
 
         sym_vars = {}
         for v in z3_vars:
@@ -166,3 +169,82 @@ def smt_verify_tool(
             "counterexample": None,
             "error_message": traceback.format_exc(),
         }
+
+
+
+# def mut_check_tool(test_func, lambdas):
+#     cont = mutmut.Context()
+#     mutated, mut_count = mutmut.mutate_ast(test_func, cont)
+# 
+#     survived = []
+# 
+#     for m in range(0, mut_count):
+#         file_namespace = {}
+#         cont1 = mutmut.Context()
+#         mutated1, mut_count1 = mutmut.mutate_ast(test_func, cont)
+
+
+def mut_check_tool(test_func, lambdas, boundary=None):
+    if callable(test_func):
+        test_func_code = inspect.getsource(test_func)
+    else:
+        test_func_code = str(test_func)
+
+
+
+    prop_list = []
+    if isinstance(lambdas, (list, tuple)):
+        for item in lambdas:
+            if isinstance(item, dict) and "z3_lambda" in item:
+                prop_list.append(item["z3_lambda"])
+            else:
+                prop_list.append(item)
+    else:
+        prop_list = [lambdas]
+
+    context = mutmut.Context(source=test_func_code)
+    _, _ = mutmut.mutate(context)
+
+    survived = []
+    killed = []
+
+    for mutation_id in context.performed_mutation_ids:
+        mut_ctx = mutmut.Context(source=test_func_code, mutation_id=mutation_id)
+        mutated_code, _ = mutmut.mutate(mut_ctx)
+
+        try:
+            mutfunc = extract_mutant_callable(mutated_code)
+            if not callable(mutfunc):
+                killed.append(str(mutation_id))
+                continue
+        except Exception:
+            killed.append(str(mutation_id))
+            continue
+
+        mutant_survived_all = True
+        for prop in prop_list:
+            if not mutant_survival(mutfunc, prop, boundary):
+                mutant_survived_all = False
+                break
+
+        if mutant_survived_all:
+            survived.append({
+                "mutation_id": str(mutation_id),
+                "mutated_code": mutated_code,
+            })
+        else:
+            killed.append(str(mutation_id))
+
+    total = len(context.performed_mutation_ids)
+    killed_count = len(killed)
+    survived_count = len(survived)
+    mutation_score = (killed_count / total) if total > 0 else 1.0
+
+    return {
+        "status": "PASSED" if survived_count == 0 else "FAILED",
+        "total_mutants": total,
+        "killed_mutants": killed_count,
+        "survived_mutants": survived_count,
+        "mutation_score": mutation_score,
+        "survived": survived,
+    }
